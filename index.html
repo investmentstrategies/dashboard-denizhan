@@ -144,7 +144,7 @@
 
     table {
       width: 100%;
-      max-width: 380px;
+      max-width: 420px;
       background: #1c1f2e;
       border-radius: 10px;
       overflow: hidden;
@@ -169,6 +169,10 @@
 
     td.total {
       color: #ffffff;
+    }
+
+    td.gain {
+      color: #ffaa00;
     }
   </style>
 </head>
@@ -203,6 +207,7 @@
         <th>Date</th>
         <th>Return</th>
         <th>Total ($)</th>
+        <th>Gained ($)</th>
       </tr>
     </thead>
     <tbody id="returns-body"></tbody>
@@ -228,17 +233,19 @@
       const year = date.getFullYear();
       const formattedDate = `${day}/${month}/${year}`;
 
+      const gainedToday = currentValue * returnRate;
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${formattedDate}</td>
         <td class="return">+${(returnRate * 100).toFixed(2)}%</td>
         <td class="total">$${currentValue.toFixed(2)}</td>
+        <td class="gain">+$${gainedToday.toFixed(2)}</td>
       `;
       document.getElementById("returns-body").appendChild(tr);
 
       labels.push(formattedDate);
       values.push(currentValue.toFixed(2));
-      currentValue *= (1 + returnRate);
+      currentValue += gainedToday;
     }
 
     document.getElementById("final-value").textContent = `$${(currentValue / (1 + returnRate)).toFixed(2)}`;
