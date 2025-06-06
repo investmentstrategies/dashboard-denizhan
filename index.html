@@ -1,3 +1,4 @@
+<!-- Insert this HTML code in full -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,6 +107,7 @@
       align-items: center;
       justify-content: center;
       flex-direction: column;
+      text-align: center;
     }
 
     .circle span {
@@ -117,6 +119,19 @@
       margin: 0;
       font-size: 1.7em;
       color: #ffffff;
+    }
+
+    .gain-loss {
+      font-size: 0.95em;
+      margin-top: 2px;
+    }
+
+    .gain {
+      color: #00ff88;
+    }
+
+    .loss {
+      color: #ff5555;
     }
 
     .chart-container {
@@ -192,6 +207,7 @@
     <div class="circle">
       <span>Investment</span>
       <h1 id="final-value">$0.00</h1>
+      <div class="gain-loss" id="gain-loss-diff"></div> <!-- NEW LINE -->
     </div>
   </div>
 
@@ -248,8 +264,17 @@
       currentValue += gainedToday;
     }
 
-    document.getElementById("final-value").textContent = `$${(currentValue / (1 + returnRate)).toFixed(2)}`;
+    // Final value
+    document.getElementById("final-value").textContent = `$${currentValue.toFixed(2)}`;
 
+    // Gain/Loss under circle
+    const gainLoss = currentValue - initialInvestment;
+    const gainLossText = `${gainLoss >= 0 ? '+' : ''}$${gainLoss.toFixed(2)}`;
+    const gainLossElem = document.getElementById("gain-loss-diff");
+    gainLossElem.textContent = gainLossText;
+    gainLossElem.className = `gain-loss ${gainLoss >= 0 ? 'gain' : 'loss'}`;
+
+    // Projections
     const projectionDiv = document.getElementById("projections");
     const projectValue = (daysAhead) => {
       let value = currentValue;
