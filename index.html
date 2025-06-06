@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crypto Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f111a;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      font-size: 14px;
+    }
+
+    header {
+      width: 100%;
+      text-align: center;
+      font-size: 1.3em;
+      margin-bottom: 25px;
+      color: #00ffe0;
+    }
+
+    .controls {
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .controls .icon {
+      font-size: 20px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 60px;
+      height: 30px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #00ffe0;
+      transition: 0.4s;
+      border-radius: 30px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 4px;
+      bottom: 4px;
+      background-color: #000;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .slider:before {
+      transform: translateX(30px);
+    }
+
+    .circle-container, .chart-container {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+      position: absolute;
+    }
+
+    .active {
+      opacity: 1;
+      pointer-events: auto;
+      position: static;
+    }
+
+    .circle-container {
+      width: 230px;
+      height: 230px;
+      margin-bottom: 25px;
+    }
+
+    .circle {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, #002831, #0f111a);
+      box-shadow: 0 0 30px #00ffe0, 0 0 60px #00ffe0 inset;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .circle span {
+      color: #00ffe0;
+      font-size: 1em;
+    }
+
+    .circle h1 {
+      margin: 0;
+      font-size: 1.7em;
+      color: #ffffff;
+    }
+
+    .chart-container {
+      background: #1c1f2e;
+      padding: 14px;
+      border-radius: 10px;
+      margin-bottom: 25px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    canvas {
+      height: 170px !important;
+    }
+
+    .projections {
+      text-align: center;
+      font-size: 0.95em;
+      margin-bottom: 25px;
+    }
+
+    .projections div {
+      margin: 4px 0;
+    }
+
+    table {
+      width: 100%;
+      max-width: 380px;
+      background: #1c1f2e;
+      border-radius: 10px;
+      overflow: hidden;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #2b2f40;
+      font-size: 13px;
+    }
+
+    th {
+      background: #11141e;
+      color: #00ffe0;
+    }
+
+    td.return {
+      color: #00ff9f;
+    }
+
+    td.total {
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <header>DASHBOARD</header>
+
+  <div class="controls">
+    <span class="icon">🔘</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="viewToggle" onchange="toggleView()" />
+      <span class="slider"></span>
+    </label>
+    <span class="icon">📈</span>
+  </div>
+
+  <div id="circleView" class="circle-container active">
+    <div class="circle">
+      <span>Investment</span>
+      <h1 id="final-value">$0.00</h1>
+    </div>
+  </div>
+
+  <div id="chartView" class="chart-container">
+    <canvas id="growthChart"></canvas>
+  </div>
+
+  <div class="projections" id="projections"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Return</th>
+        <th>Total ($)</th>
+      </tr>
+    </thead>
+    <tbody id="returns-body"></tbody>
+  </table>
+
+  <script>
+    const initialInvestment = 1090.00;
+    const returnRate = 0.0026;
+    const startDate = new Date("2025-05-29");
+    const today = new Date();
+
+    const labels = [];
+    const values = [];
+    let currentValue = initialInvestment;
+    const diffDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+    for (let i = 0; i < diffDays; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${formattedDate}</td>
+        <td class="return">+${(returnRate * 100).toFixed(2)}%</td>
+        <td class="total">$${currentValue.toFixed(2)}</td>
+      `;
+      document.getElementById("returns-body").appendChild(tr);
+
+      labels.push(formattedDate);
+      values.push(currentValue.toFixed(2));
+      currentValue *= (1 + returnRate);
+    }
+
+    document.getElementById("final-value").textContent = `$${(currentValue / (1 + returnRate)).toFixed(2)}`;
+
+    const projectionDiv = document.getElementById("projections");
+    const projectValue = (daysAhead) => {
+      let value = currentValue;
+      for (let i = 0; i < daysAhead; i++) {
+        value *= (1 + returnRate);
+      }
+      return value.toFixed(2);
+    };
+
+    projectionDiv.innerHTML = `
+      <div><strong>Projected in 30 days:</strong> $${projectValue(30)}</div>
+      <div><strong>Projected in 60 days:</strong> $${projectValue(60)}</div>
+      <div><strong>Projected in 90 days:</strong> $${projectValue(90)}</div>
+    `;
+
+    const ctx = document.getElementById('growthChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Investment Value ($)',
+          data: values,
+          fill: true,
+          backgroundColor: 'rgba(0, 255, 224, 0.1)',
+          borderColor: 'rgba(0, 255, 224, 1)',
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            labels: {
+              color: '#ffffff',
+              font: { size: 12 }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              color: '#ffffff',
+              font: { size: 10 },
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
+          y: {
+            ticks: {
+              color: '#ffffff',
+              font: { size: 11 }
+            }
+          }
+        }
+      }
+    });
+
+    function toggleView() {
+      const showChart = document.getElementById("viewToggle").checked;
+      const circle = document.getElementById("circleView");
+      const chartView = document.getElementById("chartView");
+
+      if (showChart) {
+        circle.classList.remove("active");
+        chartView.classList.add("active");
+        chart.update();
+      } else {
+        chartView.classList.remove("active");
+        circle.classList.add("active");
+      }
+    }
+  </script>
+</body>
+</html>
