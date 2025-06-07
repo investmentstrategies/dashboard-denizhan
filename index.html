@@ -33,10 +33,6 @@
       gap: 10px;
     }
 
-    .controls .icon {
-      font-size: 20px;
-    }
-
     .toggle-switch {
       position: relative;
       width: 60px;
@@ -146,14 +142,33 @@
       height: 170px !important;
     }
 
-    .projections {
+    .projection-box {
+      background: #1c1f2e;
+      border-radius: 10px;
+      padding: 16px;
       text-align: center;
-      font-size: 0.95em;
       margin-bottom: 25px;
+      width: 100%;
+      max-width: 400px;
     }
 
-    .projections div {
-      margin: 4px 0;
+    .projection-box input {
+      padding: 8px 10px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      width: 100%;
+      max-width: 100px;
+      text-align: center;
+      margin-bottom: 10px;
+      background: #0f111a;
+      color: #00ffe0;
+      outline: none;
+    }
+
+    .projection-box .result {
+      font-size: 0.95em;
+      color: #ffffff;
     }
 
     table {
@@ -214,7 +229,10 @@
     <canvas id="growthChart"></canvas>
   </div>
 
-  <div class="projections" id="projections"></div>
+  <div class="projection-box">
+    <input type="number" id="daysInput" placeholder="Days" min="1" />
+    <div class="result" id="projectionResult">Projected return: $0.00</div>
+  </div>
 
   <table>
     <thead>
@@ -239,8 +257,6 @@
     let currentValue = initialInvestment;
     const diffDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
 
-    const returnsBody = document.getElementById("returns-body");
-
     for (let i = 0; i < diffDays; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
@@ -250,49 +266,29 @@
       const year = date.getFullYear();
       const formattedDate = `${day}/${month}/${year}`;
 
-      const gain = currentValue * returnRate;
-      currentValue += gain;
+      const gainedToday = currentValue * returnRate;
+      currentValue += gainedToday;
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${formattedDate}</td>
         <td class="return">+${(returnRate * 100).toFixed(2)}%</td>
         <td class="total">$${currentValue.toFixed(2)}</td>
-        <td class="gain">+$${gain.toFixed(2)}</td>
+        <td class="gain">+$${gainedToday.toFixed(2)}</td>
       `;
-      returnsBody.appendChild(tr);
+      document.getElementById("returns-body").appendChild(tr);
 
       labels.push(formattedDate);
       values.push(currentValue.toFixed(2));
     }
 
-    // Final value in circle
     document.getElementById("final-value").textContent = `$${currentValue.toFixed(2)}`;
-
-    // Gain/Loss under circle
     const gainLoss = currentValue - initialInvestment;
-    const gainLossText = `${gainLoss >= 0 ? '+' : ''}$${gainLoss.toFixed(2)}`;
     const gainLossElem = document.getElementById("gain-loss-diff");
-    gainLossElem.textContent = gainLossText;
+    gainLossElem.textContent = `${gainLoss >= 0 ? '+' : ''}$${gainLoss.toFixed(2)}`;
     gainLossElem.className = `gain-loss ${gainLoss >= 0 ? 'gain' : 'loss'}`;
 
-    // Projections
-    const projectionDiv = document.getElementById("projections");
-    const projectValue = (daysAhead) => {
-      let projected = currentValue;
-      for (let i = 0; i < daysAhead; i++) {
-        projected *= (1 + returnRate);
-      }
-      return projected.toFixed(2);
-    };
-
-    projectionDiv.innerHTML = `
-      <div><strong>Projected in 30 days:</strong> $${projectValue(30)}</div>
-      <div><strong>Projected in 60 days:</strong> $${projectValue(60)}</div>
-      <div><strong>Projected in 90 days:</strong> $${projectValue(90)}</div>
-    `;
-
-    // Chart.js
+    // Chart
     const ctx = document.getElementById('growthChart').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'line',
@@ -350,6 +346,21 @@
         circle.classList.add("active");
       }
     }
+
+    // Projection input
+    document.getElementById("daysInput").addEventListener("input", function () {
+      const days = parseInt(this.value);
+      let projected = currentValue;
+
+      if (!isNaN(days) && days > 0) {
+        for (let i = 0; i < days; i++) {
+          projected *= (1 + returnRate);
+        }
+        document.getElementById("projectionResult").textContent = `Projected return: $${projected.toFixed(2)}`;
+      } else {
+        document.getElementById("projectionResult").textContent = "Projected return: $0.00";
+      }
+    });
   </script>
 </body>
 </html>
