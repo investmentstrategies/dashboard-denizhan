@@ -11,9 +11,6 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #0f111a;
       color: #ffffff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       padding: 20px;
       font-size: 14px;
     }
@@ -26,11 +23,46 @@
       color: #00ffe0;
     }
 
+    .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+
+    .nav-buttons button {
+      padding: 8px 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .nav-buttons .active {
+      background-color: #00ffe0;
+      color: #000;
+    }
+
+    .nav-buttons .inactive {
+      background-color: #ffaa00;
+      color: #000;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
     .controls {
       margin-bottom: 25px;
       display: flex;
       align-items: center;
       gap: 10px;
+      justify-content: center;
     }
 
     .toggle-switch {
@@ -80,7 +112,7 @@
       position: absolute;
     }
 
-    .active {
+    .active-view {
       opacity: 1;
       pointer-events: auto;
       position: static;
@@ -89,7 +121,7 @@
     .circle-container {
       width: 230px;
       height: 230px;
-      margin-bottom: 25px;
+      margin: 0 auto 25px auto;
     }
 
     .circle {
@@ -136,6 +168,8 @@
       margin-bottom: 25px;
       width: 100%;
       max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     canvas {
@@ -150,6 +184,8 @@
       margin-bottom: 25px;
       width: 100%;
       max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .projection-box input {
@@ -178,6 +214,7 @@
       border-radius: 10px;
       overflow: hidden;
       border-collapse: collapse;
+      margin: 0 auto 40px auto;
     }
 
     th, td {
@@ -203,48 +240,115 @@
     td.gain {
       color: #ffaa00;
     }
+
+    .deposit-box {
+      background: #1c1f2e;
+      border-radius: 14px;
+      padding: 24px 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .deposit-box h2 {
+      margin: 0;
+      font-size: 22px;
+      color: #00ffe0;
+      margin-bottom: 6px;
+    }
+
+    .deposit-box .network {
+      color: #ffaa00;
+      margin-bottom: 12px;
+    }
+
+    .deposit-box .address {
+      background: #0f111a;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      word-break: break-word;
+      margin-bottom: 10px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .deposit-box .copy-btn {
+      padding: 8px 14px;
+      background: #ffaa00;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .deposit-box img {
+      width: 180px;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
   <header>DASHBOARD</header>
 
-  <div class="controls">
-    <span class="icon">🔘</span>
-    <label class="toggle-switch">
-      <input type="checkbox" id="viewToggle" onchange="toggleView()" />
-      <span class="slider"></span>
-    </label>
-    <span class="icon">📈</span>
+  <div class="nav-buttons">
+    <button class="active" onclick="showSection('dashboard')">Dashboard</button>
+    <button class="inactive" onclick="showSection('deposit')">Deposit</button>
   </div>
 
-  <div id="circleView" class="circle-container active">
-    <div class="circle">
-      <span>Investment</span>
-      <h1 id="final-value">$0.00</h1>
-      <div class="gain-loss" id="gain-loss-diff"></div>
+  <!-- Dashboard Section -->
+  <div id="dashboardSection" class="section active">
+    <div class="controls">
+      <span class="icon">🔘</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="viewToggle" onchange="toggleView()" />
+        <span class="slider"></span>
+      </label>
+      <span class="icon">📈</span>
+    </div>
+
+    <div id="circleView" class="circle-container active-view">
+      <div class="circle">
+        <span>Investment</span>
+        <h1 id="final-value">$0.00</h1>
+        <div class="gain-loss" id="gain-loss-diff"></div>
+      </div>
+    </div>
+
+    <div id="chartView" class="chart-container">
+      <canvas id="growthChart"></canvas>
+    </div>
+
+    <div class="projection-box">
+      <input type="number" id="daysInput" placeholder="Days" min="1" />
+      <div class="result" id="projectionResult">Projected return: $0.00</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Return</th>
+          <th>Total ($)</th>
+          <th>PnL ($)</th>
+        </tr>
+      </thead>
+      <tbody id="returns-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Deposit Section -->
+  <div id="depositSection" class="section">
+    <div class="deposit-box">
+      <h2>Deposit USDT</h2>
+      <div class="network">Network: TRC20</div>
+      <div class="address" id="walletAddress">TJLkXN7PH8fzfPuafAPzX8TioZiKJZbb3S</div>
+      <button class="copy-btn" onclick="copyAddress()">Copy Address</button>
+      <img src="https://chart.googleapis.com/chart?cht=qr&chl=TJLkXN7PH8fzfPuafAPzX8TioZiKJZbb3S&chs=180x180&chld=L|0" alt="QR Code">
     </div>
   </div>
-
-  <div id="chartView" class="chart-container">
-    <canvas id="growthChart"></canvas>
-  </div>
-
-  <div class="projection-box">
-    <input type="number" id="daysInput" placeholder="Days" min="1" />
-    <div class="result" id="projectionResult">Projected return: $0.00</div>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Return</th>
-        <th>Total ($)</th>
-        <th>PnL ($)</th>
-      </tr>
-    </thead>
-    <tbody id="returns-body"></tbody>
-  </table>
 
   <script>
     const initialInvestment = 1090.00;
@@ -261,10 +365,7 @@
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
 
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      const formattedDate = `${day}/${month}/${year}`;
+      const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
 
       const gainedToday = currentValue * returnRate;
       currentValue += gainedToday;
@@ -288,7 +389,6 @@
     gainLossElem.textContent = `${gainLoss >= 0 ? '+' : ''}$${gainLoss.toFixed(2)}`;
     gainLossElem.className = `gain-loss ${gainLoss >= 0 ? 'gain' : 'loss'}`;
 
-    // Chart
     const ctx = document.getElementById('growthChart').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'line',
@@ -338,16 +438,15 @@
       const chartView = document.getElementById("chartView");
 
       if (showChart) {
-        circle.classList.remove("active");
-        chartView.classList.add("active");
+        circle.classList.remove("active-view");
+        chartView.classList.add("active-view");
         chart.update();
       } else {
-        chartView.classList.remove("active");
-        circle.classList.add("active");
+        chartView.classList.remove("active-view");
+        circle.classList.add("active-view");
       }
     }
 
-    // Projection input
     document.getElementById("daysInput").addEventListener("input", function () {
       const days = parseInt(this.value);
       let projected = currentValue;
@@ -361,6 +460,29 @@
         document.getElementById("projectionResult").textContent = "Projected return: $0.00";
       }
     });
+
+    function copyAddress() {
+      const address = document.getElementById("walletAddress").textContent;
+      navigator.clipboard.writeText(address).then(() => {
+        alert("Address copied to clipboard!");
+      });
+    }
+
+    function showSection(section) {
+      document.getElementById("dashboardSection").classList.remove("active");
+      document.getElementById("depositSection").classList.remove("active");
+      document.querySelectorAll(".nav-buttons button").forEach(btn => btn.classList.remove("active", "inactive"));
+
+      if (section === 'dashboard') {
+        document.getElementById("dashboardSection").classList.add("active");
+        document.querySelectorAll(".nav-buttons button")[0].classList.add("active");
+        document.querySelectorAll(".nav-buttons button")[1].classList.add("inactive");
+      } else {
+        document.getElementById("depositSection").classList.add("active");
+        document.querySelectorAll(".nav-buttons button")[1].classList.add("active");
+        document.querySelectorAll(".nav-buttons button")[0].classList.add("inactive");
+      }
+    }
   </script>
 </body>
 </html>
