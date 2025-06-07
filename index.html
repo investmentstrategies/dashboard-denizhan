@@ -239,7 +239,7 @@
     let currentValue = initialInvestment;
     const diffDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
 
-    let lastRow;
+    const returnsBody = document.getElementById("returns-body");
 
     for (let i = 0; i < diffDays; i++) {
       const date = new Date(startDate);
@@ -250,46 +250,21 @@
       const year = date.getFullYear();
       const formattedDate = `${day}/${month}/${year}`;
 
-      const gainedToday = currentValue * returnRate;
-      currentValue += gainedToday;
+      const gain = currentValue * returnRate;
+      currentValue += gain;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${formattedDate}</td>
+        <td class="return">+${(returnRate * 100).toFixed(2)}%</td>
+        <td class="total">$${currentValue.toFixed(2)}</td>
+        <td class="gain">+$${gain.toFixed(2)}</td>
+      `;
+      returnsBody.appendChild(tr);
 
       labels.push(formattedDate);
       values.push(currentValue.toFixed(2));
-
-      lastRow = `
-        <tr>
-          <td>${formattedDate}</td>
-          <td class="return">+${(returnRate * 100).toFixed(2)}%</td>
-          <td class="total">$${currentValue.toFixed(2)}</td>
-          <td class="gain">+$${gainedToday.toFixed(2)}</td>
-        </tr>
-      `;
     }
-
-    // Add all rows except last
-    let tempValue = initialInvestment;
-    for (let i = 0; i < diffDays - 1; i++) {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      const formattedDate = `${day}/${month}/${year}`;
-      const gain = tempValue * returnRate;
-      const row = `
-        <tr>
-          <td>${formattedDate}</td>
-          <td class="return">+${(returnRate * 100).toFixed(2)}%</td>
-          <td class="total">$${tempValue.toFixed(2)}</td>
-          <td class="gain">+$${gain.toFixed(2)}</td>
-        </tr>
-      `;
-      document.getElementById("returns-body").innerHTML += row;
-      tempValue += gain;
-    }
-
-    // Append the final row (last day, matching circle)
-    document.getElementById("returns-body").innerHTML += lastRow;
 
     // Final value in circle
     document.getElementById("final-value").textContent = `$${currentValue.toFixed(2)}`;
@@ -304,11 +279,11 @@
     // Projections
     const projectionDiv = document.getElementById("projections");
     const projectValue = (daysAhead) => {
-      let value = currentValue;
+      let projected = currentValue;
       for (let i = 0; i < daysAhead; i++) {
-        value *= (1 + returnRate);
+        projected *= (1 + returnRate);
       }
-      return value.toFixed(2);
+      return projected.toFixed(2);
     };
 
     projectionDiv.innerHTML = `
@@ -317,7 +292,7 @@
       <div><strong>Projected in 90 days:</strong> $${projectValue(90)}</div>
     `;
 
-    // Chart
+    // Chart.js
     const ctx = document.getElementById('growthChart').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'line',
