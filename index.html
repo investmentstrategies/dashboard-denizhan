@@ -15,6 +15,11 @@
       font-size: 14px;
     }
 
+    .content-wrapper {
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
     header {
       width: 100%;
       text-align: center;
@@ -166,10 +171,6 @@
       padding: 14px;
       border-radius: 10px;
       margin-bottom: 25px;
-      width: 100%;
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
     }
 
     canvas {
@@ -182,10 +183,6 @@
       padding: 16px;
       text-align: center;
       margin-bottom: 25px;
-      width: 100%;
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
     }
 
     .projection-box input {
@@ -209,12 +206,11 @@
 
     table {
       width: 100%;
-      max-width: 420px;
       background: #1c1f2e;
       border-radius: 10px;
       overflow: hidden;
       border-collapse: collapse;
-      margin: 0 auto 40px auto;
+      margin-bottom: 40px;
     }
 
     th, td {
@@ -282,10 +278,7 @@
       font-weight: bold;
       cursor: pointer;
       margin-bottom: 20px;
-    }
-    
-    .copy-btn {
-      color: black;
+      color: #000;
     }
 
     .deposit-box img {
@@ -295,62 +288,62 @@
   </style>
 </head>
 <body>
-  <header>DASHBOARD</header>
+  <div class="content-wrapper">
+    <header>DASHBOARD</header>
 
-  <div class="nav-buttons">
-    <button class="active" onclick="showSection('dashboard')">Dashboard</button>
-    <button class="inactive" onclick="showSection('deposit')">Deposit</button>
-  </div>
-
-  <!-- Dashboard Section -->
-  <div id="dashboardSection" class="section active">
-    <div class="controls">
-      <span class="icon">🔘</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="viewToggle" onchange="toggleView()" />
-        <span class="slider"></span>
-      </label>
-      <span class="icon">📈</span>
+    <div class="nav-buttons">
+      <button class="active" onclick="showSection('dashboard')">Dashboard</button>
+      <button class="inactive" onclick="showSection('deposit')">Deposit</button>
     </div>
 
-    <div id="circleView" class="circle-container active-view">
-      <div class="circle">
-        <span>Investment</span>
-        <h1 id="final-value">$0.00</h1>
-        <div class="gain-loss" id="gain-loss-diff"></div>
+    <div id="dashboardSection" class="section active">
+      <div class="controls">
+        <span class="icon">🔘</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="viewToggle" onchange="toggleView()" />
+          <span class="slider"></span>
+        </label>
+        <span class="icon">📈</span>
       </div>
+
+      <div id="circleView" class="circle-container active-view">
+        <div class="circle">
+          <span>Investment</span>
+          <h1 id="final-value">$0.00</h1>
+          <div class="gain-loss" id="gain-loss-diff"></div>
+        </div>
+      </div>
+
+      <div id="chartView" class="chart-container">
+        <canvas id="growthChart"></canvas>
+      </div>
+
+      <div class="projection-box">
+        <input type="number" id="daysInput" placeholder="Days" min="1" />
+        <div class="result" id="projectionResult">Projected return: $0.00</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Return</th>
+            <th>Total ($)</th>
+            <th>PnL ($)</th>
+          </tr>
+        </thead>
+        <tbody id="returns-body"></tbody>
+      </table>
     </div>
 
-    <div id="chartView" class="chart-container">
-      <canvas id="growthChart"></canvas>
-    </div>
-
-    <div class="projection-box">
-      <input type="number" id="daysInput" placeholder="Days" min="1" />
-      <div class="result" id="projectionResult">Projected return: $0.00</div>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Return</th>
-          <th>Total ($)</th>
-          <th>PnL ($)</th>
-        </tr>
-      </thead>
-      <tbody id="returns-body"></tbody>
-    </table>
-  </div>
-
-  <!-- Deposit Section -->
-  <div id="depositSection" class="section">
-    <div class="deposit-box">
-      <h2>Deposit USDT</h2>
-      <div class="network">Network: TRC20</div>
-      <div class="address" id="walletAddress">TJLkXN7PH8fzfPuafAPzX8TioZiKJZbb3S</div>
-      <button class="copy-btn" onclick="copyAddress()">Copy Address</button>
-      <img src="qr-code.JPG" alt="QR Code">
+    <div id="depositSection" class="section">
+      <div class="deposit-box">
+        <h2>Deposit USDT</h2>
+        <div class="network">Network: TRC20</div>
+        <div class="address" id="walletAddress">TJLkXN7PH8fzfPuafAPzX8TioZiKJZbb3S</div>
+        <button class="copy-btn" onclick="copyAddress()">Copy Address</button>
+        <img src="qr-code.JPG" alt="QR Code">
+      </div>
     </div>
   </div>
 
@@ -368,12 +361,9 @@
     for (let i = 0; i < diffDays; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
-
       const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
-
       const gainedToday = currentValue * returnRate;
       currentValue += gainedToday;
-
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${formattedDate}</td>
@@ -382,7 +372,6 @@
         <td class="gain">+$${gainedToday.toFixed(2)}</td>
       `;
       document.getElementById("returns-body").appendChild(tr);
-
       labels.push(formattedDate);
       values.push(currentValue.toFixed(2));
     }
@@ -454,7 +443,6 @@
     document.getElementById("daysInput").addEventListener("input", function () {
       const days = parseInt(this.value);
       let projected = currentValue;
-
       if (!isNaN(days) && days > 0) {
         for (let i = 0; i < days; i++) {
           projected *= (1 + returnRate);
